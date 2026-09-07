@@ -18,30 +18,35 @@ export async function POST(request) {
 
 যদি অফারের তথ্য অস্পষ্ট বা অসম্পূর্ণ হয়, তোমার সাধারণ অ্যাফিলিয়েট মার্কেটিং জ্ঞান দিয়ে সবচেয়ে সম্ভাব্য অনুমান দাও এবং কোথায় অনুমান করছ সেটা উল্লেখ করো। উত্তর সংক্ষিপ্ত, স্পষ্ট এবং একশনেবল রাখো।`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-5",
-        max_tokens: 1200,
-        system: systemPrompt,
-        messages: [{ role: "user", content: offer }],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: systemPrompt }],
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: offer }],
+            },
+          ],
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", errText);
+      console.error("Gemini API error:", errText);
       return Response.json({ error: "AI analysis failed" }, { status: 500 });
     }
 
     const data = await response.json();
-    const textBlock = data.content?.find((block) => block.type === "text");
-    const analysis = textBlock?.text || "কোনো ফলাফল পাওয়া যায়নি, আবার চেষ্টা করুন।";
+    const analysis =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "কোনো ফলাফল পাওয়া যায়নি, আবার চেষ্টা করুন।";
 
     return Response.json({ analysis });
   } catch (err) {
