@@ -1,4 +1,4 @@
-export async function POST(request) {
+export async function POST(request) { console.log("KEY_DEBUG:", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : "MISSING", process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.slice(0,6) : "N/A");
   try {
     const { offer } = await request.json();
 
